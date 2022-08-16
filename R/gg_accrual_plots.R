@@ -1,41 +1,34 @@
 #' ggplot2 method for cumulative accrual plots
 #' @rdname accrual_plot_cum
 #'
-#' @return \code{gg_accrual_plot_cum} returns an object of class 'ggplot' with the cumulative accrual.
+#' @return ggplot2 object
+#' @details When the \code{accrual_df} includes multiple sites, the dataframe
+#' passed to \code{ggplot} includes a \code{site} variable
+#' which can be used for faceting
 #'
 #' @export
-#'
 #' @importFrom ggplot2 ggplot aes geom_step vars scale_x_date labs
 #' @importFrom rlang !! sym
 #' @importFrom purrr map2
 #' @importFrom magrittr %>%
 #' @importFrom dplyr bind_rows rename mutate
-#'
 #' @examples
 #' ### ggplot2 approach
-#'
-#' set.seed(2020)
-#' enrollment_dates <-
-#'   as.Date("2018-01-01") + sort(sample(1:30, 50, replace = TRUE))
-#' accrual_df <- accrual_create_df(enrollment_dates)
+#' data(accrualdemo)
+#' accrual_df<-accrual_create_df(accrualdemo$date)
 #' gg_accrual_plot_cum(accrual_df)
 #' gg_accrual_plot_cum(accrual_df) +
 #'   ggplot2::theme_classic()
 #'
 #' #several sites
-#' set.seed(1)
-#' centers <-
-#'   sample(c("Site 1", "Site 2", "Site 3"),
-#'          length(enrollment_dates),
-#'          replace = TRUE)
-#' accrual_df <- accrual_create_df(enrollment_dates, by = centers)
+#' accrual_df <- accrual_create_df(accrualdemo$date, by = accrualdemo$site)
 #' gg_accrual_plot_cum(accrual_df)
 #'
 #' #assuming a common start and current date
 #' accrual_df <-
 #'   accrual_create_df(
-#'     enrollment_dates,
-#'     by = centers,
+#'     accrualdemo$date,
+#'     by = accrualdemo$site,
 #'     start_date = "common",
 #'     current_date = "common"
 #'   )
@@ -43,7 +36,7 @@
 #'
 #' #without overall
 #' accrual_df <-
-#'   accrual_create_df(enrollment_dates, by = centers, overall = FALSE)
+#'   accrual_create_df(accrualdemo$date, by = accrualdemo$site, overall = FALSE)
 #' gg_accrual_plot_cum(accrual_df)
 
 
@@ -90,21 +83,18 @@ gg_accrual_plot_cum <- function(accrual_df, xlabformat="%d%b%Y"){
 #' ggplot2 method for absolute accrual plots
 #' @rdname accrual_plot_abs
 #'
-#' @return \code{gg_accrual_plot_abs} returns an object of class 'ggplot' with the absolute accrual by time unit.
-#'
+#' @return
+#' @details When the \code{accrual_df} includes multiple sites, the dataframe
+#' passed to \code{ggplot} includes a \code{site} variable
+#' which can be used for facetting
 #' @export
-#'
 #' @importFrom ggplot2 geom_bar
 #' @importFrom purrr map
 #' @importFrom dplyr filter
-#'
 #' @examples
 #' ### ggplot2 approach
-#'
-#' set.seed(2020)
-#' enrollment_dates <-
-#'   as.Date("2018-01-01") + sort(sample(1:100, 50, replace = TRUE))
-#' accrual_df <- accrual_create_df(enrollment_dates)
+#' data(accrualdemo)
+#' accrual_df<-accrual_create_df(accrualdemo$date)
 #' gg_accrual_plot_abs(accrual_df, unit = "week")
 #' gg_accrual_plot_abs(accrual_df, unit = "week") +
 #'   ggplot2::theme_classic()
@@ -113,13 +103,7 @@ gg_accrual_plot_cum <- function(accrual_df, xlabformat="%d%b%Y"){
 #' gg_accrual_plot_abs(accrual_df, unit = "day")
 #'
 #' #accrual_df with by option
-#' set.seed(2020)
-#' centers <-
-#'   sample(c("Site 1", "Site 2", "Site 3"),
-#'          length(enrollment_dates),
-#'          replace = TRUE)
-#' centers <- factor(centers, levels = c("Site 1", "Site 2", "Site 3"))
-#' accrual_df <- accrual_create_df(enrollment_dates, by = centers)
+#' accrual_df <- accrual_create_df(accrualdemo$date, by = accrualdemo$site)
 #' gg_accrual_plot_abs(accrual_df = accrual_df, unit = "week")
 #' gg_accrual_plot_abs(accrual_df = accrual_df, unit = "week") +
 #'   ggplot2::scale_fill_discrete(type = c("black", "red", "blue", "green"))
@@ -145,8 +129,7 @@ gg_accrual_plot_abs <- function(accrual_df
 
     out <- accrual_time_unit(accrual_df, unit=unit)%>%
       rename('Recruited participants' = Freq) %>%
-	   rename('Date' = date) %>%
-      ggplot(aes(x = Date, y = !!sym('Recruited participants'))) +
+      ggplot(aes(x = date, y = !!sym('Recruited participants'))) +
       geom_bar(stat = "identity")
 
   }
@@ -164,10 +147,8 @@ gg_accrual_plot_abs <- function(accrual_df
       bind_rows() %>%
       filter(site != "Overall") %>%
       mutate(site = factor(site, names(accrual_df), names(accrual_df))) %>%
-      rename('Recruited participants' = Freq)  %>%
-	  rename('Date' = date)
-	  
-    out <- ggplot(x, aes(x = Date,
+      rename('Recruited participants' = Freq)
+    out <- ggplot(x, aes(x = date,
                          y = !!sym('Recruited participants'),
                          fill = site)) +
       geom_bar(stat = "identity") +
@@ -184,60 +165,54 @@ gg_accrual_plot_abs <- function(accrual_df
 #' ggplot2 method for accrual prediction plots
 #' @rdname accrual_plot_predict
 #'
-#' @return \code{gg_accrual_plot_predict} an object of class 'ggplot' with the accrual prediction.
+#' @return
+#' @details When the \code{accrual_df} includes multiple sites, the dataframe
+#' passed to \code{ggplot} includes a \code{site} variable
+#' which can be used for facetting
 #'
 #' @export
-#'
 #' @importFrom ggplot2 geom_point geom_line annotation_custom ggtitle
 #' @importFrom purrr pmap
 #' @importFrom grid grobTree textGrob
-#'
 #' @examples
 #' ### ggplot2 approach
-#'
-#' #Data
-#' set.seed(2020)
-#' enrollment_dates <- as.Date("2018-01-01") + sort(sample(1:30, 50, replace=TRUE))
-#'
-#' #Default plot
-#' accrual_df <- accrual_create_df(enrollment_dates)
-#' gg_accrual_plot_predict(accrual_df = accrual_df, target = 100)
-#' gg_accrual_plot_predict(accrual_df = accrual_df, target = 100) +
+#' data(accrualdemo)
+#' accrual_df<-accrual_create_df(accrualdemo$date)
+#' gg_accrual_plot_predict(accrual_df = accrual_df, target = 300)
+#' gg_accrual_plot_predict(accrual_df = accrual_df, target = 300) +
 #'   ggplot2::theme_classic()
 #'
 #' #Include site
-#' set.seed(2021)
-#' centers<-sample(c("Site 1","Site 2","Site 3"),
-#'                 length(enrollment_dates), replace=TRUE)
-#' accrual_df<-accrual_create_df(enrollment_dates, by=centers)
-#' gg_accrual_plot_predict(accrual_df=accrual_df, target=100)
+#' accrual_df<-accrual_create_df(accrualdemo$date, by=accrualdemo$site)
+#' gg_accrual_plot_predict(accrual_df=accrual_df, target=300)
 #'
 #'
 #' #Format prediction end date
 #' gg_accrual_plot_predict(accrual_df = accrual_df,
-#'                         target=100,
-#'                         pos_prediction="in",
-#'                         format_prediction="%Y-%m-%d")
+#'	target=300,
+#'	pos_prediction="in",
+#'	format_prediction="%Y-%m-%d")
 #'
 #'
 #' #predictions for all sites
 #' gg_accrual_plot_predict(accrual_df = accrual_df,
-#'                         target = c(30,30,30,100))
+#'	target=c("Site 1"=160,"Site 2"=100,"Site 3"=40,"Overall"=300))
 #' gg_accrual_plot_predict(accrual_df = accrual_df,
-#'                         target = c(30,30,30,100)) +
-#'    ggplot2::theme(legend.position = c(0.15,.9)) +
-#'    ggplot2::labs(col = "Site")
+#'  target=c("Site 1"=160,"Site 2"=100,"Site 3"=40,"Overall"=300)) +
+#' 	ggplot2::theme(legend.position = c(0.15,.9)) +
+#' 	ggplot2::labs(col = "Site")
 
 gg_accrual_plot_predict <- function(accrual_df
                                     , target
                                     , overall = TRUE
                                     , name_overall = attr(accrual_df, "name_overall")
-									, fill_up = TRUE
-                                    , wfun = function(x) seq(1 / nrow(x), 1, by = 1/nrow(x))
                                     , col.pred = "red"
                                     , lty.pred = 2
                                     , pch.pred = 8
+                                    , fill_up = TRUE
+                                    , wfun = function(x) seq(1 / nrow(x), 1, by = 1/nrow(x))
                                     , pos_prediction = c("out", "in", "none")
+									, label_prediction=NULL
                                     , format_prediction = "%B %d, %Y"
                                     , xlabformat = "%d%b%Y"
                                     ){
@@ -254,7 +229,20 @@ gg_accrual_plot_predict <- function(accrual_df
       accrual_df <- accrual_df[[name_overall]]
     }
   }
-
+  preddate<-TRUE
+  if (is.Date(target)) {
+    preddate<-FALSE
+	check_date(target)
+  }
+	
+  if (is.null(label_prediction)) {
+	if (preddate) {
+	  label_prediction<-"Predicted end date: "
+	} else {
+	  label_prediction<-"Predicted sample size: "
+	}
+  }
+	
   accrual_df_o <- accrual_df
   tmp <- lc_lct(accrual_df,
                 overall,
@@ -271,13 +259,21 @@ gg_accrual_plot_predict <- function(accrual_df
                  overall,
                  target,
                  name_overall)
-  end_date <- tmp$end_date
-  edate <- tmp$edate
+				 
+  if (preddate) {				 
+	end_date <- tmp$end_date
+	edate <- tmp$edate
+	targetm <- target
+  } else {
+    end_date <- target
+	edate <- max(target)
+	targetm <- unlist(tmp$end_date)
+  }
   adf <- tmp$adf
 
   if(is_accrual_list(accrual_df) & length(target) > 1){
 
-    pdat <- pmap(list(accrual_df, end_date, target), function(x, y, z){
+    pdat <- pmap(list(accrual_df, end_date, targetm), function(x, y, z){
       data.frame(date = c(max(x$Date), y),
                          cum = c(max(x$Cumulative, na.rm = TRUE), z))
     })
@@ -286,19 +282,26 @@ gg_accrual_plot_predict <- function(accrual_df
     l <- list()
     while(n <= length(target)){
       tmp <- pdat[[n]]
-      l[[length(l)+1]] <- geom_line(data = tmp,
-                                    mapping = aes(x = date, y = cum),
-                                    col = col.pred,
-                                    lty = lty.pred)
-      l[[length(l)+1]] <- geom_point(data = tmp[2, ],
-                                     aes(x = date, y = cum),
-                                     col = col.pred,
-                                     pch = pch.pred)
-
-      names(accrual_df_o)[n] <- paste0(names(accrual_df_o)[n], ": ",
-                                      format(end_date[[n]], format = format_prediction))
-
-      n <- n + 1
+	  if (is.finite(as.numeric(tmp$date[2]))) {
+		  
+		  l[[length(l)+1]] <- geom_line(data = tmp,
+										mapping = aes(x = date, y = cum),
+										col = col.pred,
+										lty = lty.pred)
+		  l[[length(l)+1]] <- geom_point(data = tmp[2, ],
+										 aes(x = date, y = cum),
+										 col = col.pred,
+										 pch = pch.pred)
+		  if (preddate) {
+		    names(accrual_df_o)[n] <- paste0(names(accrual_df_o)[n], ": ",
+										  format(end_date[[n]], format = format_prediction))
+		  } else {
+		    names(accrual_df_o)[n] <- paste0(names(accrual_df_o)[n], ": ",
+										  round(targetm[n], digits = 0))
+			}		  
+		 							  
+		}
+	  n <- n + 1			
     }
 
     pgeom <- function() l
@@ -307,25 +310,27 @@ gg_accrual_plot_predict <- function(accrual_df
   } else {
 
     pdat <- data.frame(date = c(max(adf$Date), edate),
-                       cum = c(max(adf$Cumulative), target))
+                       cum = c(max(adf$Cumulative), targetm))
     pgeom <- function() {
       list(
         geom_line(data = pdat,
                   mapping = aes(x = date, y = cum),
                   col = col.pred,
                   lty = lty.pred),
-        geom_point(aes(x = edate, y = target),
+        geom_point(aes(x = edate, y = targetm),
                    col = col.pred,
                    pch = pch.pred)
       )
     }
   }
 
-
-  pred_text <- paste0("Predicted end date: ",
-                      format(edate, format = format_prediction))
-
-  out <- gg_accrual_plot_cum(accrual_df_o)
+  if (preddate) {
+	pred_text <- paste0(label_prediction,format(edate, format = format_prediction))
+  } else {
+	pred_text <- paste0(label_prediction,round(targetm, digits = 0))
+  }
+  
+  out <- gg_accrual_plot_cum(accrual_df_o, xlabformat)
 
   out <- out + pgeom()
 
@@ -336,11 +341,6 @@ gg_accrual_plot_predict <- function(accrual_df
       out <- out + annotation_custom(grob)
     }
   }
-
-  suppressMessages(
-    out <- out +
-      scale_x_date(labels = function(x)format(x, format = xlabformat))
-  )
 
   return(out)
 }
