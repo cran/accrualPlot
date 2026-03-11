@@ -1,4 +1,4 @@
-## ---- include = FALSE---------------------------------------------------------
+## ----include = FALSE----------------------------------------------------------
 knitr::opts_chunk$set(
   collapse = TRUE,
   comment = "#>",
@@ -29,7 +29,7 @@ start_date<-as.Date(c("2020-07-09","2020-07-09","2020-08-01"))
 names(start_date)<-c("Site 1","Site 2","Site 3")
 df4 <- accrual_create_df(accrualdemo$date, by = accrualdemo$site, start_date = start_date)
 
-## ---- include = FALSE---------------------------------------------------------
+## ----include = FALSE----------------------------------------------------------
 oldpar <- par(no.readonly = TRUE)
 
 ## -----------------------------------------------------------------------------
@@ -88,11 +88,11 @@ plot(df, which = "predict", target = 300, cex_prediction=0.9)
 plot(df2, which = "predict", target = 300, cex_prediction=0.9)
 plot(df4, which = "predict", target = 300, cex_prediction=0.9,  center_legend="strip")
 
-## ---- fig.height=6,out.width = '70%'------------------------------------------
+## ----fig.height=6,out.width = '70%'-------------------------------------------
 plot(df4, which = "predict", target=c("Site 1"=160,"Site 2"=100,"Site 3"=40,"Overall"=300),
      show_center=FALSE)
 
-## ---- fig.height=4------------------------------------------------------------
+## ----fig.height=4-------------------------------------------------------------
 p1 <- plot(df, which = "predict", target = 300, engine = "ggplot2") +
   theme(plot.title.position = "plot")
 p2 <- plot(df2, which = "predict", target=c("Site 1"=160,"Site 2"=100,"Site 3"=40,"Overall"=300),
@@ -108,10 +108,10 @@ p2 <- plot(df2, which = "predict", target=c("Site 1"=160,"Site 2"=100,"Site 3"=4
         axis.title.x = element_blank())
 p1 + p2
 
-## ---- eval = FALSE------------------------------------------------------------
-#  gg_accrual_plot_predict(df2, target=c("Site 1"=160,"Site 2"=100,"Site 3"=40,"Overall"=300))
+## ----eval = FALSE-------------------------------------------------------------
+# gg_accrual_plot_predict(df2, target=c("Site 1"=160,"Site 2"=100,"Site 3"=40,"Overall"=300))
 
-## ---- fig.height=4, out.width = '90%'-----------------------------------------
+## ----fig.height=4, out.width = '90%'------------------------------------------
 par(mfrow = c(1, 2))
 plot(df4, which = "predict", target = as.Date("2020-12-31"), cex_prediction=0.9,  center_legend="strip")
 target<-rep(as.Date("2020-12-31"),4)
@@ -125,6 +125,6 @@ summary(df2, unit = "day")
 summary(df3, unit = "day") 
 summary(df3, unit = "day", header = FALSE) 
 
-## ---- include = FALSE---------------------------------------------------------
+## ----include = FALSE----------------------------------------------------------
 par(oldpar)
 
